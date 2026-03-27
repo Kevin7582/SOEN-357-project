@@ -1,0 +1,391 @@
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router";
+import {
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  XCircle,
+  Eye,
+  EyeOff,
+  Brain,
+  Trophy,
+  RefreshCw,
+} from "lucide-react";
+import { vocab } from "../../data/vocab";
+
+type Status = "unanswered" | "known" | "unknown";
+
+export default function Study() {
+  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [statuses, setStatuses] = useState<Status[]>(vocab.map(() => "unanswered"));
+  const [isComplete, setIsComplete] = useState(false);
+
+  const current = vocab[currentIndex];
+  const known = statuses.filter((s) => s === "known").length;
+  const unknown = statuses.filter((s) => s === "unknown").length;
+  const progress = ((known + unknown) / vocab.length) * 100;
+
+  const handleFlip = useCallback(() => {
+    setIsFlipped((f) => !f);
+  }, []);
+
+  const handleMark = (status: "known" | "unknown") => {
+    const updated = [...statuses];
+    updated[currentIndex] = status;
+    setStatuses(updated);
+
+    setTimeout(() => {
+      if (currentIndex < vocab.length - 1) {
+        setCurrentIndex((i) => i + 1);
+        setIsFlipped(false);
+      } else {
+        setIsComplete(true);
+      }
+    }, 300);
+  };
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+      setIsFlipped(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < vocab.length - 1) {
+      setCurrentIndex((i) => i + 1);
+      setIsFlipped(false);
+    }
+  };
+
+  const handleRestart = () => {
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setStatuses(vocab.map(() => "unanswered"));
+    setIsComplete(false);
+  };
+
+  if (isComplete) {
+    return (
+      <div className="min-h-full flex flex-col items-center justify-center px-8 py-16 bg-slate-50">
+        <div className="bg-white rounded-3xl p-10 max-w-md w-full text-center border border-slate-100 shadow-xl">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+            style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+          >
+            <Trophy size={36} color="white" />
+          </div>
+          <h2 className="text-slate-800 mb-2" style={{ fontWeight: 700, fontSize: 24 }}>
+            Session Complete!
+          </h2>
+          <p className="text-slate-500 text-sm mb-8">
+            You've reviewed all {vocab.length} vocabulary cards.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="rounded-2xl p-4 text-center" style={{ background: "#f0fdf4" }}>
+              <div className="text-3xl font-bold text-green-600 mb-1">{known}</div>
+              <div className="text-xs text-green-700">Remembered</div>
+            </div>
+            <div className="rounded-2xl p-4 text-center" style={{ background: "#fef2f2" }}>
+              <div className="text-3xl font-bold text-red-500 mb-1">{unknown}</div>
+              <div className="text-xs text-red-600">Need Review</div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate("/quiz")}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+            >
+              <Brain size={16} />
+              Test Yourself — Quiz Mode
+            </button>
+            <button
+              onClick={handleRestart}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all"
+            >
+              <RefreshCw size={16} />
+              Study Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-full flex flex-col bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 px-8 py-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h1 className="text-slate-800 text-base" style={{ fontWeight: 700 }}>
+                Study Cards
+              </h1>
+              <p className="text-slate-400 text-xs">
+                Card {currentIndex + 1} of {vocab.length} · Click card to reveal
+              </p>
+            </div>
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle size={14} className="text-green-500" />
+                <span className="text-slate-600">{known} Known</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <XCircle size={14} className="text-red-400" />
+                <span className="text-slate-600">{unknown} Review</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full bg-slate-100 rounded-full h-1.5">
+            <div
+              className="h-1.5 rounded-full transition-all duration-500"
+              style={{
+                width: `${progress}%`,
+                background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
+              }}
+            />
+          </div>
+          <div className="flex justify-between mt-1">
+            {vocab.map((_, i) => {
+              const s = statuses[i];
+              return (
+                <div
+                  key={i}
+                  onClick={() => {
+                    setCurrentIndex(i);
+                    setIsFlipped(false);
+                  }}
+                  className="cursor-pointer rounded-full transition-all"
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background:
+                      i === currentIndex
+                        ? "#6366f1"
+                        : s === "known"
+                        ? "#10b981"
+                        : s === "unknown"
+                        ? "#ef4444"
+                        : "#e2e8f0",
+                    transform: i === currentIndex ? "scale(1.3)" : "scale(1)",
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Card area */}
+      <div className="flex-1 flex flex-col items-center justify-center px-8 py-10">
+        <div className="max-w-md w-full">
+          {/* Category badge */}
+          <div className="flex justify-center mb-4">
+            <span
+              className="text-xs font-medium px-3 py-1 rounded-full"
+              style={{ background: "#e0e7ff", color: "#4338ca" }}
+            >
+              {current.category}
+            </span>
+          </div>
+
+          {/* Flip card */}
+          <div
+            className="cursor-pointer"
+            style={{ perspective: "1000px", height: 380 }}
+            onClick={handleFlip}
+          >
+            <div
+              className="relative w-full h-full transition-transform"
+              style={{
+                transformStyle: "preserve-3d",
+                transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                transition: "transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            >
+              {/* Front — image */}
+              <div
+                className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl"
+                style={{ backfaceVisibility: "hidden" }}
+              >
+                <img
+                  src={current.image}
+                  alt={current.word}
+                  className="w-full h-full object-cover"
+                />
+                {/* Overlay */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)",
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-white/60 text-xs mb-1 uppercase tracking-wider">
+                        What is the Spanish word?
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-white/70 text-xs bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+                      <Eye size={12} />
+                      Tap to reveal
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Back — word */}
+              <div
+                className="absolute inset-0 rounded-3xl bg-white shadow-2xl flex flex-col items-center justify-center p-8"
+                style={{
+                  backfaceVisibility: "hidden",
+                  transform: "rotateY(180deg)",
+                  border: "2px solid #e0e7ff",
+                }}
+              >
+                <img
+                  src={current.image}
+                  alt={current.word}
+                  className="w-20 h-20 rounded-2xl object-cover mb-6 shadow-lg"
+                />
+                <div className="text-center">
+                  <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">
+                    Spanish
+                  </div>
+                  <div
+                    className="text-slate-800 mb-2"
+                    style={{ fontSize: 42, fontWeight: 800, letterSpacing: -1 }}
+                  >
+                    {current.translation}
+                  </div>
+                  <div className="text-slate-400 text-sm">{current.word} in English</div>
+                </div>
+                <div className="mt-8 flex items-center gap-1 text-indigo-400 text-xs bg-indigo-50 px-3 py-1.5 rounded-full">
+                  <EyeOff size={11} />
+                  Tap to flip back
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="mt-6 space-y-3">
+            {isFlipped && (
+              <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <button
+                  onClick={() => handleMark("unknown")}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-red-200 text-red-500 bg-red-50 font-medium text-sm hover:bg-red-100 hover:border-red-300 transition-all"
+                >
+                  <XCircle size={16} />
+                  Still Learning
+                </button>
+                <button
+                  onClick={() => handleMark("known")}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-green-200 text-green-600 bg-green-50 font-medium text-sm hover:bg-green-100 hover:border-green-300 transition-all"
+                >
+                  <CheckCircle size={16} />
+                  Got It!
+                </button>
+              </div>
+            )}
+
+            {!isFlipped && (
+              <button
+                onClick={handleFlip}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white font-semibold transition-all hover:opacity-90"
+                style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+              >
+                <RotateCcw size={16} />
+                Reveal Word
+              </button>
+            )}
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handlePrev}
+                disabled={currentIndex === 0}
+                className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors py-2 px-3 rounded-xl hover:bg-white"
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </button>
+              <span className="text-xs text-slate-400">
+                {currentIndex + 1} / {vocab.length}
+              </span>
+              <button
+                onClick={handleNext}
+                disabled={currentIndex === vocab.length - 1}
+                className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors py-2 px-3 rounded-xl hover:bg-white"
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom deck preview */}
+      <div className="bg-white border-t border-slate-100 px-8 py-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-xs text-slate-400 mb-2">All Cards</div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {vocab.map((word, i) => {
+              const s = statuses[i];
+              return (
+                <button
+                  key={word.id}
+                  onClick={() => {
+                    setCurrentIndex(i);
+                    setIsFlipped(false);
+                  }}
+                  className="shrink-0 relative rounded-xl overflow-hidden border-2 transition-all"
+                  style={{
+                    width: 56,
+                    height: 40,
+                    borderColor:
+                      i === currentIndex
+                        ? "#6366f1"
+                        : s === "known"
+                        ? "#10b981"
+                        : s === "unknown"
+                        ? "#ef4444"
+                        : "#e2e8f0",
+                  }}
+                >
+                  <img
+                    src={word.image}
+                    alt={word.word}
+                    className="w-full h-full object-cover"
+                  />
+                  {s === "known" && (
+                    <div className="absolute inset-0 bg-green-500/40 flex items-center justify-center">
+                      <CheckCircle size={12} color="white" />
+                    </div>
+                  )}
+                  {s === "unknown" && (
+                    <div className="absolute inset-0 bg-red-500/40 flex items-center justify-center">
+                      <XCircle size={12} color="white" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
