@@ -71,7 +71,7 @@ export default function Study() {
   if (isComplete) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center px-8 py-16 bg-slate-50">
-        <div className="bg-white rounded-3xl p-10 max-w-md w-full text-center border border-slate-100 shadow-xl">
+        <div className="bg-white rounded-3xl p-10 max-w-md w-full text-center border border-slate-100 shadow-xl motion-reveal">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
             style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
@@ -99,7 +99,7 @@ export default function Study() {
           <div className="space-y-3">
             <button
               onClick={() => navigate("/quiz")}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90 motion-button"
               style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
             >
               <Brain size={16} />
@@ -107,7 +107,7 @@ export default function Study() {
             </button>
             <button
               onClick={handleRestart}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all motion-button"
             >
               <RefreshCw size={16} />
               Study Again
@@ -121,7 +121,7 @@ export default function Study() {
   return (
     <div className="min-h-full flex flex-col bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-8 py-4">
+      <div className="bg-white border-b border-slate-100 px-8 py-4 motion-reveal-fast">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -187,7 +187,7 @@ export default function Study() {
 
       {/* Card area */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-10">
-        <div className="max-w-md w-full">
+        <div className="max-w-md w-full motion-reveal-fast" style={{ animationDelay: "120ms" }}>
           {/* Category badge */}
           <div className="flex justify-center mb-4">
             <span
@@ -214,7 +214,7 @@ export default function Study() {
             >
               {/* Front — image */}
               <div
-                className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl"
+                className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl motion-card"
                 style={{ backfaceVisibility: "hidden" }}
               >
                 <img
@@ -247,7 +247,7 @@ export default function Study() {
 
               {/* Back — word */}
               <div
-                className="absolute inset-0 rounded-3xl bg-white shadow-2xl flex flex-col items-center justify-center p-8"
+                className="absolute inset-0 rounded-3xl bg-white shadow-2xl flex flex-col items-center justify-center p-8 motion-card"
                 style={{
                   backfaceVisibility: "hidden",
                   transform: "rotateY(180deg)",
@@ -303,7 +303,7 @@ export default function Study() {
             {!isFlipped && (
               <button
                 onClick={handleFlip}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white font-semibold transition-all hover:opacity-90"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white font-semibold transition-all hover:opacity-90 motion-button"
                 style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
               >
                 <RotateCcw size={16} />
@@ -338,7 +338,7 @@ export default function Study() {
       </div>
 
       {/* Bottom deck preview */}
-      <div className="bg-white border-t border-slate-100 px-8 py-4">
+      <div className="bg-white border-t border-slate-100 px-8 py-4 motion-reveal-fast" style={{ animationDelay: "200ms" }}>
         <div className="max-w-2xl mx-auto">
           <div className="text-xs text-slate-400 mb-2">All Cards</div>
           <div className="flex gap-2 overflow-x-auto pb-1">

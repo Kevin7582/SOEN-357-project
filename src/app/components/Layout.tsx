@@ -31,9 +31,9 @@ export default function Layout() {
         }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
+        <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10 motion-reveal-fast">
           <div
-            className="flex items-center justify-center rounded-xl shrink-0"
+            className="flex items-center justify-center rounded-xl shrink-0 motion-glow"
             style={{ width: 40, height: 40, background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
           >
             <Layers size={20} color="white" />
@@ -61,7 +61,7 @@ export default function Layout() {
                 key={to}
                 to={to}
                 className={() =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group ${
+                  `motion-card motion-card-soft flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group ${
                     isActive
                       ? "bg-indigo-500/20 text-indigo-300"
                       : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -108,7 +108,9 @@ export default function Layout() {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        <Outlet />
+        <div key={location.pathname} className="page-enter min-h-full">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

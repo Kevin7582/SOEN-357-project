@@ -125,7 +125,7 @@ export default function Quiz() {
   if (isComplete) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center px-8 py-16 bg-slate-50">
-        <div className="bg-white rounded-3xl p-10 max-w-md w-full border border-slate-100 shadow-xl">
+        <div className="bg-white rounded-3xl p-10 max-w-md w-full border border-slate-100 shadow-xl motion-reveal">
           <div className="text-center mb-8">
             <div
               className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -225,7 +225,7 @@ export default function Quiz() {
           <div className="space-y-3">
             <button
               onClick={handleRestart}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90 motion-button"
               style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
             >
               <RefreshCw size={16} />
@@ -233,7 +233,7 @@ export default function Quiz() {
             </button>
             <button
               onClick={() => navigate("/study")}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all motion-button"
             >
               <BookOpen size={16} />
               Back to Study Cards
@@ -250,7 +250,7 @@ export default function Quiz() {
   if (!hasStarted) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center px-8 py-16 bg-slate-50">
-        <div className="bg-white rounded-3xl p-10 max-w-md w-full border border-slate-100 shadow-xl">
+        <div className="bg-white rounded-3xl p-10 max-w-md w-full border border-slate-100 shadow-xl motion-reveal">
           <h1 className="text-slate-800 text-2xl mb-2" style={{ fontWeight: 700 }}>
             Quiz Mode
           </h1>
@@ -261,7 +261,7 @@ export default function Quiz() {
           <div className="space-y-3">
             <button
               onClick={handleStartQuiz}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90 motion-button"
               style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
             >
               Start Quiz
@@ -269,7 +269,7 @@ export default function Quiz() {
             </button>
             <button
               onClick={() => navigate("/study")}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all motion-button"
             >
               <BookOpen size={16} />
               Back to Study Cards
@@ -283,7 +283,7 @@ export default function Quiz() {
   return (
     <div className="min-h-full flex flex-col bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-8 py-4">
+      <div className="bg-white border-b border-slate-100 px-8 py-4 motion-reveal-fast">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-slate-800 text-base" style={{ fontWeight: 700 }}>
@@ -341,7 +341,7 @@ export default function Quiz() {
 
       {/* Question area */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-10">
-        <div className="max-w-lg w-full">
+        <div className="max-w-lg w-full motion-reveal-fast" style={{ animationDelay: "120ms" }}>
           {/* Question */}
           <p className="text-center text-slate-500 text-sm mb-6">
             What is the{" "}
@@ -350,7 +350,7 @@ export default function Quiz() {
 
           {/* Image */}
           <div
-            className="rounded-3xl overflow-hidden shadow-2xl mb-8 mx-auto"
+            className="rounded-3xl overflow-hidden shadow-2xl mb-8 mx-auto motion-card"
             style={{ height: 260, maxWidth: 380 }}
           >
             <img
@@ -392,7 +392,7 @@ export default function Quiz() {
                   key={idx}
                   onClick={() => handleSelect(idx)}
                   disabled={selected !== null}
-                  className="relative flex items-center justify-between gap-2 p-4 rounded-2xl border-2 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-95 disabled:cursor-default disabled:hover:scale-100"
+                  className="motion-card-soft relative flex items-center justify-between gap-2 p-4 rounded-2xl border-2 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-95 disabled:cursor-default disabled:hover:scale-100"
                   style={{
                     borderColor,
                     background: bgColor,
@@ -467,7 +467,7 @@ export default function Quiz() {
 
               <button
                 onClick={handleNext}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-white font-semibold transition-all hover:opacity-90"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-white font-semibold transition-all hover:opacity-90 motion-button"
                 style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
               >
                 {currentIndex < questions.length - 1 ? (
