@@ -5,8 +5,6 @@ import {
   Zap,
   ArrowRight,
   BookOpen,
-  TrendingUp,
-  Clock,
   CheckCircle2,
   Layers,
   Image,
@@ -42,12 +40,6 @@ const featureCards = [
     bg: "bg-amber-50",
     iconColor: "text-amber-600",
   },
-];
-
-const resultStats = [
-  { label: "Recall Accuracy (Immediate)", image: "82%", translation: "68%", better: true },
-  { label: "Recall Accuracy (Delayed)", image: "75%", translation: "55%", better: true },
-  { label: "Avg. Response Time", image: "2.1s", translation: "3.0s", better: true },
 ];
 
 export default function Home() {
@@ -120,13 +112,6 @@ export default function Home() {
               Start Studying
               <ArrowRight size={16} />
             </button>
-            <button
-              onClick={() => navigate("/results")}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-slate-200 font-semibold border border-white/20 bg-white/10 hover:bg-white/20 transition-all"
-            >
-              <TrendingUp size={16} />
-              View Results
-            </button>
           </div>
         </div>
 
@@ -159,7 +144,7 @@ export default function Home() {
 
       {/* Quick stats */}
       <div className="px-8 py-6 bg-white border-b border-slate-100">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-6 max-w-4xl">
           <div className="text-center">
             <div className="text-2xl font-bold text-slate-800" style={{ fontWeight: 700 }}>
               10
@@ -170,25 +155,7 @@ export default function Home() {
             <div className="text-2xl font-bold text-slate-800" style={{ fontWeight: 700 }}>
               2
             </div>
-            <div className="text-xs text-slate-500 mt-0.5">Study Groups</div>
-          </div>
-          <div className="text-center">
-            <div
-              className="text-2xl font-bold"
-              style={{ fontWeight: 700, color: "#10b981" }}
-            >
-              +20%
-            </div>
-            <div className="text-xs text-slate-500 mt-0.5">Accuracy Gain</div>
-          </div>
-          <div className="text-center">
-            <div
-              className="text-2xl font-bold"
-              style={{ fontWeight: 700, color: "#6366f1" }}
-            >
-              0.9s
-            </div>
-            <div className="text-xs text-slate-500 mt-0.5">Faster Recall</div>
+            <div className="text-xs text-slate-500 mt-0.5">Learning Modes</div>
           </div>
         </div>
       </div>
@@ -292,71 +259,6 @@ export default function Home() {
                 ))}
               </ul>
             </div>
-          </div>
-        </section>
-
-        {/* Result preview */}
-        <section>
-          <div className="mb-6">
-            <h2 className="text-slate-800 mb-1" style={{ fontWeight: 700 }}>
-              Study Results Summary
-            </h2>
-            <p className="text-slate-500 text-sm">
-              Key findings from the controlled user study comparing both groups.
-            </p>
-          </div>
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-            <div className="grid grid-cols-5 px-5 py-3 bg-slate-50 border-b border-slate-100 text-xs text-slate-500 font-medium uppercase tracking-wider">
-              <div className="col-span-2">Metric</div>
-              <div className="text-center text-indigo-600">Image-Based</div>
-              <div className="text-center">Translation</div>
-              <div className="text-center">Improvement</div>
-            </div>
-            {resultStats.map(({ label, image, translation }, idx) => {
-              const imgNum = parseFloat(image);
-              const transNum = parseFloat(translation);
-              const unit = image.includes("s") ? "s" : "%";
-              const diff =
-                unit === "s"
-                  ? `${(transNum - imgNum).toFixed(1)}s faster`
-                  : `+${(imgNum - transNum).toFixed(0)}%`;
-              return (
-                <div
-                  key={label}
-                  className={`grid grid-cols-5 px-5 py-4 items-center ${
-                    idx !== resultStats.length - 1 ? "border-b border-slate-50" : ""
-                  }`}
-                >
-                  <div className="col-span-2 text-sm text-slate-700">{label}</div>
-                  <div className="text-center">
-                    <span
-                      className="text-sm font-semibold"
-                      style={{ color: "#6366f1", fontWeight: 700 }}
-                    >
-                      {image}
-                    </span>
-                  </div>
-                  <div className="text-center text-sm text-slate-500">{translation}</div>
-                  <div className="text-center">
-                    <span
-                      className="text-xs font-semibold px-2 py-1 rounded-full"
-                      style={{ background: "#dcfce7", color: "#16a34a" }}
-                    >
-                      {diff}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-4">
-            <button
-              onClick={() => navigate("/results")}
-              className="inline-flex items-center gap-2 text-sm text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
-            >
-              View full results analysis
-              <ArrowRight size={14} />
-            </button>
           </div>
         </section>
 

@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   BookOpen,
   Brain,
-  BarChart3,
   ChevronLeft,
   ChevronRight,
   Layers,
@@ -15,7 +14,6 @@ const navItems = [
   { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/study", label: "Study Cards", icon: BookOpen },
   { to: "/quiz", label: "Quiz Mode", icon: Brain },
-  { to: "/results", label: "Results", icon: BarChart3 },
 ];
 
 export default function Layout() {
