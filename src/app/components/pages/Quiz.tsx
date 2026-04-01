@@ -45,11 +45,12 @@ const TIMER_PER_QUESTION = 10;
 export default function Quiz() {
   const navigate = useNavigate();
   const [questions] = useState<Question[]>(() => generateQuestions());
+  const [hasStarted, setHasStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [responseTimes, setResponseTimes] = useState<number[]>([]);
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const [questionStartTime, setQuestionStartTime] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIMER_PER_QUESTION);
   const [isComplete, setIsComplete] = useState(false);
   const [answers, setAnswers] = useState<(number | null)[]>(vocab.map(() => null));
@@ -67,7 +68,7 @@ export default function Quiz() {
   }, [selected, questionStartTime, answers, currentIndex]);
 
   useEffect(() => {
-    if (selected !== null || isComplete) return;
+    if (!hasStarted || selected !== null || isComplete) return;
     setTimeLeft(TIMER_PER_QUESTION);
     const interval = setInterval(() => {
       setTimeLeft((t) => {
@@ -80,7 +81,13 @@ export default function Quiz() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [currentIndex, selected, isComplete]);
+  }, [currentIndex, hasStarted, selected, isComplete, handleTimeUp]);
+
+  const handleStartQuiz = () => {
+    setHasStarted(true);
+    setQuestionStartTime(Date.now());
+    setTimeLeft(TIMER_PER_QUESTION);
+  };
 
   const handleSelect = (idx: number) => {
     if (selected !== null) return;
@@ -239,6 +246,39 @@ export default function Quiz() {
 
   const timerPct = (timeLeft / TIMER_PER_QUESTION) * 100;
   const timerColor = timeLeft > 6 ? "#10b981" : timeLeft > 3 ? "#f59e0b" : "#ef4444";
+
+  if (!hasStarted) {
+    return (
+      <div className="min-h-full flex flex-col items-center justify-center px-8 py-16 bg-slate-50">
+        <div className="bg-white rounded-3xl p-10 max-w-md w-full border border-slate-100 shadow-xl">
+          <h1 className="text-slate-800 text-2xl mb-2" style={{ fontWeight: 700 }}>
+            Quiz Mode
+          </h1>
+          <p className="text-slate-500 text-sm mb-8" style={{ lineHeight: 1.6 }}>
+            You will answer {questions.length} questions with {TIMER_PER_QUESTION} seconds per
+            question. Start when you are ready.
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={handleStartQuiz}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+            >
+              Start Quiz
+              <ChevronRight size={16} />
+            </button>
+            <button
+              onClick={() => navigate("/study")}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all"
+            >
+              <BookOpen size={16} />
+              Back to Study Cards
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full flex flex-col bg-slate-50">
