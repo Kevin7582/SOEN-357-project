@@ -139,7 +139,7 @@ export default function Home() {
               <img
                 src={word.image}
                 alt={word.word}
-                className="w-full object-cover"
+                className="w-full object-contain object-center bg-slate-50"
                 style={{ height: 90 }}
               />
               <div className="p-2">

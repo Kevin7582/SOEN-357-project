@@ -206,7 +206,7 @@ export default function Quiz() {
                   <img
                     src={q.word.image}
                     alt={q.word.word}
-                    className="w-8 h-8 rounded-lg object-cover"
+                    className="w-8 h-8 rounded-lg object-contain object-center bg-slate-50 p-0.5"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-slate-700 font-medium">{q.word.word}</div>
@@ -350,14 +350,19 @@ export default function Quiz() {
 
           {/* Image */}
           <div
-            className="rounded-3xl overflow-hidden shadow-2xl mb-8 mx-auto motion-card"
+            className="rounded-3xl overflow-hidden shadow-2xl mb-8 mx-auto motion-card p-6 flex items-center justify-center"
             style={{ height: 260, maxWidth: 380 }}
           >
-            <img
-              src={current.word.image}
-              alt="vocabulary"
-              className="w-full h-full object-cover"
-            />
+            <div
+              className="w-full h-full flex items-center justify-center rounded-2xl"
+              style={{ background: "radial-gradient(circle at 30% 20%, #eef2ff 0%, #ffffff 65%)" }}
+            >
+              <img
+                src={current.word.image}
+                alt="vocabulary"
+                className="w-full h-full object-contain object-center"
+              />
+            </div>
           </div>
 
           {/* Options */}

@@ -217,11 +217,16 @@ export default function Study() {
                 className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl motion-card"
                 style={{ backfaceVisibility: "hidden" }}
               >
-                <img
-                  src={current.image}
-                  alt={current.word}
-                  className="w-full h-full object-cover"
-                />
+                <div
+                  className="w-full h-full p-8 flex items-center justify-center"
+                  style={{ background: "radial-gradient(circle at 30% 20%, #eef2ff 0%, #ffffff 65%)" }}
+                >
+                  <img
+                    src={current.image}
+                    alt={current.word}
+                    className="w-full h-full object-contain object-center"
+                  />
+                </div>
                 {/* Overlay */}
                 <div
                   className="absolute inset-0"
@@ -257,7 +262,7 @@ export default function Study() {
                 <img
                   src={current.image}
                   alt={current.word}
-                  className="w-20 h-20 rounded-2xl object-cover mb-6 shadow-lg"
+                  className="w-20 h-20 rounded-2xl object-contain object-center mb-6 shadow-lg bg-slate-50 p-1.5"
                 />
                 <div className="text-center">
                   <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">
@@ -368,7 +373,7 @@ export default function Study() {
                   <img
                     src={word.image}
                     alt={word.word}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain object-center bg-slate-50"
                   />
                   {s === "known" && (
                     <div className="absolute inset-0 bg-green-500/40 flex items-center justify-center">
