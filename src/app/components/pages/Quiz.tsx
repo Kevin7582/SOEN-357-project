@@ -49,7 +49,7 @@ export default function Quiz() {
   const location = useLocation();
   const modeParam = new URLSearchParams(location.search).get("mode");
   const mode: QuizMode = modeParam === "word" ? "word" : "image";
-  const [questions] = useState<Question[]>(() => generateQuestions());
+  const [questions, setQuestions] = useState<Question[]>(() => generateQuestions());
   const [hasStarted, setHasStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -72,6 +72,24 @@ export default function Quiz() {
     setAnswers(updated);
     setSelected(-1);
   }, [selected, questionStartTime, answers, currentIndex]);
+
+  useEffect(() => {
+    setQuestions(generateQuestions());
+    setHasStarted(false);
+    setCurrentIndex(0);
+    setSelected(null);
+    setScore(0);
+    setResponseTimes([]);
+    setQuestionStartTime(0);
+    setTimeLeft(TIMER_PER_QUESTION);
+    setIsComplete(false);
+    setAnswers(vocab.map(() => null));
+  }, [mode]);
+
+  const handleModeChange = (nextMode: QuizMode) => {
+    if (nextMode === mode) return;
+    navigate(`/quiz?mode=${nextMode}`);
+  };
 
   useEffect(() => {
     if (!hasStarted || selected !== null || isComplete) return;
@@ -270,6 +288,30 @@ export default function Quiz() {
             Quiz Mode
           </h1>
           <div className="text-xs font-medium text-indigo-600 mb-2">{modeLabel} Mode</div>
+          <div className="flex gap-2 mb-5">
+            <button
+              onClick={() => handleModeChange("image")}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+              style={{
+                borderColor: mode === "image" ? "#6366f1" : "#cbd5e1",
+                background: mode === "image" ? "#eef2ff" : "white",
+                color: mode === "image" ? "#4338ca" : "#64748b",
+              }}
+            >
+              Image Mode
+            </button>
+            <button
+              onClick={() => handleModeChange("word")}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+              style={{
+                borderColor: mode === "word" ? "#6366f1" : "#cbd5e1",
+                background: mode === "word" ? "#eef2ff" : "white",
+                color: mode === "word" ? "#4338ca" : "#64748b",
+              }}
+            >
+              Word Mode
+            </button>
+          </div>
           <p className="text-slate-500 text-sm mb-8" style={{ lineHeight: 1.6 }}>
             You will answer {questions.length} questions with {TIMER_PER_QUESTION} seconds per
             question. Start when you are ready.
@@ -308,6 +350,30 @@ export default function Quiz() {
             <p className="text-slate-400 text-xs">
               {modeLabel} - Question {currentIndex + 1} of {questions.length}
             </p>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => handleModeChange("image")}
+                className="px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all"
+                style={{
+                  borderColor: mode === "image" ? "#6366f1" : "#cbd5e1",
+                  background: mode === "image" ? "#eef2ff" : "white",
+                  color: mode === "image" ? "#4338ca" : "#64748b",
+                }}
+              >
+                Image
+              </button>
+              <button
+                onClick={() => handleModeChange("word")}
+                className="px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all"
+                style={{
+                  borderColor: mode === "word" ? "#6366f1" : "#cbd5e1",
+                  background: mode === "word" ? "#eef2ff" : "white",
+                  color: mode === "word" ? "#4338ca" : "#64748b",
+                }}
+              >
+                Word
+              </button>
+            </div>
           </div>
 
           {/* Timer */}
