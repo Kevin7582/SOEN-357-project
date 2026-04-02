@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import {
   RotateCcw,
   ChevronLeft,
@@ -11,13 +11,20 @@ import {
   Brain,
   Trophy,
   RefreshCw,
+  Languages,
+  Image as ImageIcon,
 } from "lucide-react";
 import { vocab } from "../../data/vocab";
 
 type Status = "unanswered" | "known" | "unknown";
+type StudyMode = "image" | "word";
 
 export default function Study() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const modeParam = new URLSearchParams(location.search).get("mode");
+  const mode: StudyMode = modeParam === "word" ? "word" : "image";
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [statuses, setStatuses] = useState<Status[]>(vocab.map(() => "unanswered"));
@@ -27,10 +34,17 @@ export default function Study() {
   const known = statuses.filter((s) => s === "known").length;
   const unknown = statuses.filter((s) => s === "unknown").length;
   const progress = ((known + unknown) / vocab.length) * 100;
+  const modeLabel = mode === "word" ? "Word to Word" : "Image to Word";
 
   const handleFlip = useCallback(() => {
     setIsFlipped((f) => !f);
   }, []);
+
+  const handleModeChange = (nextMode: StudyMode) => {
+    if (nextMode === mode) return;
+    setIsFlipped(false);
+    navigate(`/study?mode=${nextMode}`);
+  };
 
   const handleMark = (status: "known" | "unknown") => {
     const updated = [...statuses];
@@ -81,8 +95,9 @@ export default function Study() {
           <h2 className="text-slate-800 mb-2" style={{ fontWeight: 700, fontSize: 24 }}>
             Session Complete!
           </h2>
+          <div className="text-xs font-medium text-indigo-600 mb-2">{modeLabel} Mode</div>
           <p className="text-slate-500 text-sm mb-8">
-            You've reviewed all {vocab.length} vocabulary cards.
+            You have reviewed all {vocab.length} vocabulary cards.
           </p>
 
           <div className="grid grid-cols-2 gap-4 mb-8">
@@ -98,12 +113,12 @@ export default function Study() {
 
           <div className="space-y-3">
             <button
-              onClick={() => navigate("/quiz")}
+              onClick={() => navigate(`/quiz?mode=${mode}`)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90 motion-button"
               style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
             >
               <Brain size={16} />
-              Test Yourself — Quiz Mode
+              Test Yourself - Quiz Mode
             </button>
             <button
               onClick={handleRestart}
@@ -123,14 +138,40 @@ export default function Study() {
       {/* Header */}
       <div className="bg-white border-b border-slate-100 px-8 py-4 motion-reveal-fast">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
             <div>
               <h1 className="text-slate-800 text-base" style={{ fontWeight: 700 }}>
                 Study Cards
               </h1>
               <p className="text-slate-400 text-xs">
-                Card {currentIndex + 1} of {vocab.length} · Click card to reveal
+                {modeLabel} - Card {currentIndex + 1} of {vocab.length} - Click card to reveal
               </p>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => handleModeChange("image")}
+                  className="px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all inline-flex items-center gap-1"
+                  style={{
+                    borderColor: mode === "image" ? "#6366f1" : "#cbd5e1",
+                    background: mode === "image" ? "#eef2ff" : "white",
+                    color: mode === "image" ? "#4338ca" : "#64748b",
+                  }}
+                >
+                  <ImageIcon size={12} />
+                  Image to Word
+                </button>
+                <button
+                  onClick={() => handleModeChange("word")}
+                  className="px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all inline-flex items-center gap-1"
+                  style={{
+                    borderColor: mode === "word" ? "#6366f1" : "#cbd5e1",
+                    background: mode === "word" ? "#eef2ff" : "white",
+                    color: mode === "word" ? "#4338ca" : "#64748b",
+                  }}
+                >
+                  <Languages size={12} />
+                  Word to Word
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-1.5">
@@ -212,45 +253,69 @@ export default function Study() {
                 transition: "transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             >
-              {/* Front — image */}
+              {/* Front */}
               <div
                 className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl motion-card"
                 style={{ backfaceVisibility: "hidden" }}
               >
-                <div
-                  className="w-full h-full p-8 flex items-center justify-center"
-                  style={{ background: "radial-gradient(circle at 30% 20%, #eef2ff 0%, #ffffff 65%)" }}
-                >
-                  <img
-                    src={current.image}
-                    alt={current.word}
-                    className="w-full h-full object-contain object-center"
-                  />
-                </div>
-                {/* Overlay */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)",
-                  }}
-                />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-white/60 text-xs mb-1 uppercase tracking-wider">
-                        What is the Spanish word?
+                {mode === "image" ? (
+                  <>
+                    <div
+                      className="w-full h-full p-8 flex items-center justify-center"
+                      style={{
+                        background: "radial-gradient(circle at 30% 20%, #eef2ff 0%, #ffffff 65%)",
+                      }}
+                    >
+                      <img
+                        src={current.image}
+                        alt={current.word}
+                        className="w-full h-full object-contain object-center"
+                      />
+                    </div>
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)",
+                      }}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-white/60 text-xs mb-1 uppercase tracking-wider">
+                            What is the Spanish word?
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-white/70 text-xs bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+                          <Eye size={12} />
+                          Tap to reveal
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-white/70 text-xs bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+                  </>
+                ) : (
+                  <div
+                    className="w-full h-full p-8 flex flex-col items-center justify-center"
+                    style={{
+                      background: "radial-gradient(circle at 30% 20%, #eef2ff 0%, #ffffff 65%)",
+                    }}
+                  >
+                    <div className="text-xs uppercase tracking-widest text-slate-400 mb-3">English</div>
+                    <div
+                      className="text-slate-800 text-center mb-4"
+                      style={{ fontSize: 44, fontWeight: 800, letterSpacing: -1 }}
+                    >
+                      {current.word}
+                    </div>
+                    <div className="text-slate-500 text-sm">What is the Spanish translation?</div>
+                    <div className="mt-6 flex items-center gap-1.5 text-indigo-500 text-xs bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
                       <Eye size={12} />
                       Tap to reveal
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* Back — word */}
+              {/* Back - word */}
               <div
                 className="absolute inset-0 rounded-3xl bg-white shadow-2xl flex flex-col items-center justify-center p-8 motion-card"
                 style={{
@@ -259,15 +324,15 @@ export default function Study() {
                   border: "2px solid #e0e7ff",
                 }}
               >
-                <img
-                  src={current.image}
-                  alt={current.word}
-                  className="w-20 h-20 rounded-2xl object-contain object-center mb-6 shadow-lg bg-slate-50 p-1.5"
-                />
+                {mode === "image" && (
+                  <img
+                    src={current.image}
+                    alt={current.word}
+                    className="w-20 h-20 rounded-2xl object-contain object-center mb-6 shadow-lg bg-slate-50 p-1.5"
+                  />
+                )}
                 <div className="text-center">
-                  <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">
-                    Spanish
-                  </div>
+                  <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">Spanish</div>
                   <div
                     className="text-slate-800 mb-2"
                     style={{ fontSize: 42, fontWeight: 800, letterSpacing: -1 }}
@@ -312,7 +377,7 @@ export default function Study() {
                 style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
               >
                 <RotateCcw size={16} />
-                Reveal Word
+                Reveal Translation
               </button>
             )}
 
@@ -343,7 +408,10 @@ export default function Study() {
       </div>
 
       {/* Bottom deck preview */}
-      <div className="bg-white border-t border-slate-100 px-8 py-4 motion-reveal-fast" style={{ animationDelay: "200ms" }}>
+      <div
+        className="bg-white border-t border-slate-100 px-8 py-4 motion-reveal-fast"
+        style={{ animationDelay: "200ms" }}
+      >
         <div className="max-w-2xl mx-auto">
           <div className="text-xs text-slate-400 mb-2">All Cards</div>
           <div className="flex gap-2 overflow-x-auto pb-1">
@@ -368,13 +436,20 @@ export default function Study() {
                         : s === "unknown"
                         ? "#ef4444"
                         : "#e2e8f0",
+                    background: mode === "word" ? "#f8fafc" : undefined,
                   }}
                 >
-                  <img
-                    src={word.image}
-                    alt={word.word}
-                    className="w-full h-full object-contain object-center bg-slate-50"
-                  />
+                  {mode === "image" ? (
+                    <img
+                      src={word.image}
+                      alt={word.word}
+                      className="w-full h-full object-contain object-center bg-slate-50"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center px-1 text-[10px] font-semibold text-slate-700 text-center leading-tight">
+                      {word.word}
+                    </div>
+                  )}
                   {s === "known" && (
                     <div className="absolute inset-0 bg-green-500/40 flex items-center justify-center">
                       <CheckCircle size={12} color="white" />
