@@ -212,15 +212,10 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 motion-stagger">
             {/* Image-based */}
-            <div className="bg-white rounded-2xl border-2 border-indigo-100 p-5 relative motion-card">
-              <div className="absolute top-4 right-4">
-                <span
-                  className="text-xs font-semibold px-2 py-1 rounded-full"
-                  style={{ background: "#e0e7ff", color: "#4338ca" }}
-                >
-                  This Prototype
-                </span>
-              </div>
+            <button
+              onClick={() => navigate("/study?mode=image")}
+              className="bg-white rounded-2xl border border-indigo-100 p-5 relative motion-card text-left w-full transition-all hover:shadow-md"
+            >
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2.5 rounded-xl bg-indigo-50">
                   <Eye size={20} className="text-indigo-600" />
@@ -242,15 +237,18 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </button>
 
             {/* Translation-based */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 motion-card">
+            <button
+              onClick={() => navigate("/study?mode=word")}
+              className="bg-white rounded-2xl border border-indigo-100 p-5 motion-card text-left w-full transition-all hover:shadow-md"
+            >
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2.5 rounded-xl bg-slate-50">
-                  <Languages size={20} className="text-slate-500" />
+                <div className="p-2.5 rounded-xl bg-indigo-50">
+                  <Languages size={20} className="text-indigo-600" />
                 </div>
-                <h3 className="text-slate-700 text-sm" style={{ fontWeight: 600 }}>
+                <h3 className="text-slate-800 text-sm" style={{ fontWeight: 600 }}>
                   Translation-Based Learning
                 </h3>
               </div>
@@ -261,13 +259,13 @@ export default function Home() {
                   "Single processing channel (verbal only)",
                   "Risk of L1 interference and shallow learning",
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-slate-500">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 mt-0.5 shrink-0" />
+                  <li key={item} className="flex items-start gap-2 text-sm text-slate-600">
+                    <CheckCircle2 size={14} className="text-indigo-500 mt-0.5 shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
-            </div>
+            </button>
           </div>
         </section>
 
