@@ -282,11 +282,11 @@ export default function Home() {
                 Try the Prototype
               </h2>
               <p className="text-indigo-200 text-sm max-w-md" style={{ lineHeight: 1.6 }}>
-                Experience image-based vocabulary learning firsthand. Study 10 Spanish words using
-                visual cues, then test your recall in quiz mode.
+                Compare both learning methods. Study the same vocabulary, then take both quiz modes
+                to evaluate image-based recall versus word-based translation.
               </p>
             </div>
-            <div className="flex gap-3 shrink-0">
+            <div className="flex flex-wrap gap-3 shrink-0">
               <button
                 onClick={() => navigate("/study")}
                 className="motion-button inline-flex items-center gap-2 px-5 py-3 rounded-xl text-white font-semibold transition-all hover:scale-105"
@@ -296,11 +296,18 @@ export default function Home() {
                 Study Cards
               </button>
               <button
-                onClick={() => navigate("/quiz")}
+                onClick={() => navigate("/quiz?mode=image")}
                 className="motion-button inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all"
               >
                 <Brain size={16} />
-                Take Quiz
+                Image Quiz
+              </button>
+              <button
+                onClick={() => navigate("/quiz?mode=word")}
+                className="motion-button inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all"
+              >
+                <Languages size={16} />
+                Word Quiz
               </button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import {
   Timer,
   CheckCircle2,
@@ -16,6 +16,8 @@ interface Question {
   options: string[];
   correctIndex: number;
 }
+
+type QuizMode = "image" | "word";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -44,6 +46,9 @@ const TIMER_PER_QUESTION = 10;
 
 export default function Quiz() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const modeParam = new URLSearchParams(location.search).get("mode");
+  const mode: QuizMode = modeParam === "word" ? "word" : "image";
   const [questions] = useState<Question[]>(() => generateQuestions());
   const [hasStarted, setHasStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -56,6 +61,7 @@ export default function Quiz() {
   const [answers, setAnswers] = useState<(number | null)[]>(vocab.map(() => null));
 
   const current = questions[currentIndex];
+  const modeLabel = mode === "word" ? "Word to Word" : "Word to Image";
 
   const handleTimeUp = useCallback(() => {
     if (selected !== null) return;
@@ -141,9 +147,12 @@ export default function Quiz() {
             <h2 className="text-slate-800 mb-1" style={{ fontWeight: 700, fontSize: 26 }}>
               Quiz Complete!
             </h2>
+            <div className="text-xs font-medium text-indigo-600 mb-1">{modeLabel} Mode</div>
             <p className="text-slate-400 text-sm">
               {percentage >= 80
-                ? "Excellent work! Your visual memory is strong."
+                ? mode === "word"
+                  ? "Excellent work! Your translation recall is strong."
+                  : "Excellent work! Your visual memory is strong."
                 : percentage >= 60
                 ? "Good progress! Keep practicing."
                 : "Keep studying — you'll improve!"}
@@ -203,11 +212,17 @@ export default function Quiz() {
                     background: correct ? "#f0fdf4" : "#fef2f2",
                   }}
                 >
-                  <img
-                    src={q.word.image}
-                    alt={q.word.word}
-                    className="w-8 h-8 rounded-lg object-contain object-center bg-slate-50 p-0.5"
-                  />
+                  {mode === "image" ? (
+                    <img
+                      src={q.word.image}
+                      alt={q.word.word}
+                      className="w-8 h-8 rounded-lg object-contain object-center bg-slate-50 p-0.5"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 text-[11px] font-semibold flex items-center justify-center">
+                      W
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-slate-700 font-medium">{q.word.word}</div>
                     <div className="text-xs text-slate-400">→ {q.word.translation}</div>
@@ -254,6 +269,7 @@ export default function Quiz() {
           <h1 className="text-slate-800 text-2xl mb-2" style={{ fontWeight: 700 }}>
             Quiz Mode
           </h1>
+          <div className="text-xs font-medium text-indigo-600 mb-2">{modeLabel} Mode</div>
           <p className="text-slate-500 text-sm mb-8" style={{ lineHeight: 1.6 }}>
             You will answer {questions.length} questions with {TIMER_PER_QUESTION} seconds per
             question. Start when you are ready.
@@ -290,7 +306,7 @@ export default function Quiz() {
               Quiz Mode
             </h1>
             <p className="text-slate-400 text-xs">
-              Question {currentIndex + 1} of {questions.length}
+              {modeLabel} - Question {currentIndex + 1} of {questions.length}
             </p>
           </div>
 
@@ -344,26 +360,52 @@ export default function Quiz() {
         <div className="max-w-lg w-full motion-reveal-fast" style={{ animationDelay: "120ms" }}>
           {/* Question */}
           <p className="text-center text-slate-500 text-sm mb-6">
-            What is the{" "}
-            <span className="text-indigo-600 font-semibold">Spanish</span> word for this image?
+            {mode === "image" ? (
+              <>
+                What is the <span className="text-indigo-600 font-semibold">Spanish</span> word for
+                this image?
+              </>
+            ) : (
+              <>
+                What is the <span className="text-indigo-600 font-semibold">Spanish</span> word for{" "}
+                <span className="font-semibold text-slate-700">{current.word.word}</span>?
+              </>
+            )}
           </p>
 
-          {/* Image */}
-          <div
-            className="rounded-3xl overflow-hidden shadow-2xl mb-8 mx-auto motion-card p-6 flex items-center justify-center"
-            style={{ height: 260, maxWidth: 380 }}
-          >
+          {mode === "image" ? (
             <div
-              className="w-full h-full flex items-center justify-center rounded-2xl"
-              style={{ background: "radial-gradient(circle at 30% 20%, #eef2ff 0%, #ffffff 65%)" }}
+              className="rounded-3xl overflow-hidden shadow-2xl mb-8 mx-auto motion-card p-6 flex items-center justify-center"
+              style={{ height: 260, maxWidth: 380 }}
             >
-              <img
-                src={current.word.image}
-                alt="vocabulary"
-                className="w-full h-full object-contain object-center"
-              />
+              <div
+                className="w-full h-full flex items-center justify-center rounded-2xl"
+                style={{
+                  background: "radial-gradient(circle at 30% 20%, #eef2ff 0%, #ffffff 65%)",
+                }}
+              >
+                <img
+                  src={current.word.image}
+                  alt="vocabulary"
+                  className="w-full h-full object-contain object-center"
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div
+              className="rounded-3xl shadow-2xl mb-8 mx-auto motion-card p-8 flex items-center justify-center"
+              style={{
+                height: 220,
+                maxWidth: 380,
+                background: "radial-gradient(circle at 30% 20%, #eef2ff 0%, #ffffff 65%)",
+              }}
+            >
+              <div className="text-center">
+                <div className="text-xs uppercase tracking-widest text-slate-400 mb-2">English</div>
+                <div className="text-4xl font-extrabold text-slate-800">{current.word.word}</div>
+              </div>
+            </div>
+          )}
 
           {/* Options */}
           <div className="grid grid-cols-2 gap-3">
@@ -494,3 +536,4 @@ export default function Quiz() {
     </div>
   );
 }
+
