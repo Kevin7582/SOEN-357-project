@@ -8,12 +8,14 @@ import {
   ChevronRight,
   Layers,
   GraduationCap,
+  FlaskConical,
 } from "lucide-react";
 
 const navItems = [
   { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/study", label: "Study Cards", icon: BookOpen },
   { to: "/quiz", label: "Quiz Mode", icon: Brain },
+  { to: "/evaluation", label: "Evaluation", icon: FlaskConical },
 ];
 
 export default function Layout() {

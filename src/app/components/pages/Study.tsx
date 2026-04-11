@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
   RotateCcw,
@@ -13,8 +13,16 @@ import {
   RefreshCw,
   Languages,
   Image as ImageIcon,
+  FlaskConical,
 } from "lucide-react";
 import { vocab } from "../../data/vocab";
+import {
+  getSessionById,
+  markLearningCompleted,
+  markLearningStarted,
+  recordReview,
+  recordStudyAttempt,
+} from "../../data/experimentStore";
 
 type Status = "unanswered" | "known" | "unknown";
 type StudyMode = "image" | "word";
@@ -22,13 +30,18 @@ type StudyMode = "image" | "word";
 export default function Study() {
   const navigate = useNavigate();
   const location = useLocation();
-  const modeParam = new URLSearchParams(location.search).get("mode");
-  const mode: StudyMode = modeParam === "word" ? "word" : "image";
+  const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const modeParam = params.get("mode");
+  const sessionId = params.get("session");
+  const session = sessionId ? getSessionById(sessionId) : null;
+  const mode: StudyMode =
+    session?.learningMode ?? (modeParam === "word" ? "word" : "image");
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [statuses, setStatuses] = useState<Status[]>(vocab.map(() => "unanswered"));
   const [isComplete, setIsComplete] = useState(false);
+  const [recallStartTime, setRecallStartTime] = useState<number | null>(null);
 
   const current = vocab[currentIndex];
   const known = statuses.filter((s) => s === "known").length;
@@ -36,13 +49,35 @@ export default function Study() {
   const progress = ((known + unknown) / vocab.length) * 100;
   const modeLabel = mode === "word" ? "Word to Word" : "Image to Word";
 
+  useEffect(() => {
+    if (sessionId) {
+      markLearningStarted(sessionId);
+    }
+  }, [sessionId]);
+
   const handleFlip = useCallback(() => {
-    setIsFlipped((f) => !f);
-  }, []);
+    setIsFlipped((f) => {
+      const next = !f;
+      if (next) {
+        setRecallStartTime(Date.now());
+        if (sessionId) {
+          recordReview(sessionId, current.id);
+        }
+      } else {
+        setRecallStartTime(null);
+      }
+      return next;
+    });
+  }, [sessionId, current.id]);
 
   const handleModeChange = (nextMode: StudyMode) => {
+    if (session && nextMode !== session.learningMode) return;
     if (nextMode === mode) return;
     setIsFlipped(false);
+    if (sessionId) {
+      navigate(`/study?mode=${nextMode}&session=${sessionId}`);
+      return;
+    }
     navigate(`/study?mode=${nextMode}`);
   };
 
@@ -51,11 +86,25 @@ export default function Study() {
     updated[currentIndex] = status;
     setStatuses(updated);
 
+    if (sessionId) {
+      const responseTimeMs = recallStartTime ? Date.now() - recallStartTime : 0;
+      recordStudyAttempt(sessionId, {
+        wordId: current.id,
+        known: status === "known",
+        responseTimeMs,
+        reviewedAt: new Date().toISOString(),
+      });
+    }
+
+    setRecallStartTime(null);
     setTimeout(() => {
       if (currentIndex < vocab.length - 1) {
         setCurrentIndex((i) => i + 1);
         setIsFlipped(false);
       } else {
+        if (sessionId) {
+          markLearningCompleted(sessionId);
+        }
         setIsComplete(true);
       }
     }, 300);
@@ -65,6 +114,7 @@ export default function Study() {
     if (currentIndex > 0) {
       setCurrentIndex((i) => i - 1);
       setIsFlipped(false);
+      setRecallStartTime(null);
     }
   };
 
@@ -72,6 +122,7 @@ export default function Study() {
     if (currentIndex < vocab.length - 1) {
       setCurrentIndex((i) => i + 1);
       setIsFlipped(false);
+      setRecallStartTime(null);
     }
   };
 
@@ -79,7 +130,13 @@ export default function Study() {
     setCurrentIndex(0);
     setIsFlipped(false);
     setStatuses(vocab.map(() => "unanswered"));
+    setRecallStartTime(null);
     setIsComplete(false);
+    if (sessionId) {
+      navigate(`/study?mode=${mode}&session=${sessionId}`);
+      return;
+    }
+    navigate(`/study?mode=${mode}`);
   };
 
   if (isComplete) {
@@ -93,7 +150,7 @@ export default function Study() {
             <Trophy size={36} color="white" />
           </div>
           <h2 className="text-slate-800 mb-2" style={{ fontWeight: 700, fontSize: 24 }}>
-            Session Complete!
+            Session Complete
           </h2>
           <div className="text-xs font-medium text-indigo-600 mb-2">{modeLabel} Mode</div>
           <p className="text-slate-500 text-sm mb-8">
@@ -113,12 +170,18 @@ export default function Study() {
 
           <div className="space-y-3">
             <button
-              onClick={() => navigate(`/quiz?mode=${mode}`)}
+              onClick={() =>
+                navigate(
+                  sessionId
+                    ? `/quiz?mode=${mode}&session=${sessionId}&phase=immediate`
+                    : `/quiz?mode=${mode}`,
+                )
+              }
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90 motion-button"
               style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
             >
               <Brain size={16} />
-              Test Yourself - Quiz Mode
+              Immediate Recall Test
             </button>
             <button
               onClick={handleRestart}
@@ -127,6 +190,15 @@ export default function Study() {
               <RefreshCw size={16} />
               Study Again
             </button>
+            {sessionId && (
+              <button
+                onClick={() => navigate("/evaluation")}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 font-medium transition-all motion-button"
+              >
+                <FlaskConical size={16} />
+                Back to Evaluation
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -135,7 +207,6 @@ export default function Study() {
 
   return (
     <div className="min-h-full flex flex-col bg-slate-50">
-      {/* Header */}
       <div className="bg-white border-b border-slate-100 px-8 py-4 motion-reveal-fast">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
@@ -154,6 +225,7 @@ export default function Study() {
                     borderColor: mode === "image" ? "#6366f1" : "#cbd5e1",
                     background: mode === "image" ? "#eef2ff" : "white",
                     color: mode === "image" ? "#4338ca" : "#64748b",
+                    opacity: session && session.learningMode !== "image" ? 0.45 : 1,
                   }}
                 >
                   <ImageIcon size={12} />
@@ -166,6 +238,7 @@ export default function Study() {
                     borderColor: mode === "word" ? "#6366f1" : "#cbd5e1",
                     background: mode === "word" ? "#eef2ff" : "white",
                     color: mode === "word" ? "#4338ca" : "#64748b",
+                    opacity: session && session.learningMode !== "word" ? 0.45 : 1,
                   }}
                 >
                   <Languages size={12} />
@@ -185,7 +258,6 @@ export default function Study() {
             </div>
           </div>
 
-          {/* Progress bar */}
           <div className="w-full bg-slate-100 rounded-full h-1.5">
             <div
               className="h-1.5 rounded-full transition-all duration-500"
@@ -204,6 +276,7 @@ export default function Study() {
                   onClick={() => {
                     setCurrentIndex(i);
                     setIsFlipped(false);
+                    setRecallStartTime(null);
                   }}
                   className="cursor-pointer rounded-full transition-all"
                   style={{
@@ -213,10 +286,10 @@ export default function Study() {
                       i === currentIndex
                         ? "#6366f1"
                         : s === "known"
-                        ? "#10b981"
-                        : s === "unknown"
-                        ? "#ef4444"
-                        : "#e2e8f0",
+                          ? "#10b981"
+                          : s === "unknown"
+                            ? "#ef4444"
+                            : "#e2e8f0",
                     transform: i === currentIndex ? "scale(1.3)" : "scale(1)",
                   }}
                 />
@@ -226,10 +299,8 @@ export default function Study() {
         </div>
       </div>
 
-      {/* Card area */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-10">
         <div className="max-w-md w-full motion-reveal-fast" style={{ animationDelay: "120ms" }}>
-          {/* Category badge */}
           <div className="flex justify-center mb-4">
             <span
               className="text-xs font-medium px-3 py-1 rounded-full"
@@ -239,7 +310,6 @@ export default function Study() {
             </span>
           </div>
 
-          {/* Flip card */}
           <div
             className="cursor-pointer"
             style={{ perspective: "1000px", height: 380 }}
@@ -253,7 +323,6 @@ export default function Study() {
                 transition: "transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             >
-              {/* Front */}
               <div
                 className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl motion-card"
                 style={{ backfaceVisibility: "hidden" }}
@@ -315,7 +384,6 @@ export default function Study() {
                 )}
               </div>
 
-              {/* Back - word */}
               <div
                 className="absolute inset-0 rounded-3xl bg-white shadow-2xl flex flex-col items-center justify-center p-8 motion-card"
                 style={{
@@ -349,7 +417,6 @@ export default function Study() {
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="mt-6 space-y-3">
             {isFlipped && (
               <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -365,7 +432,7 @@ export default function Study() {
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-green-200 text-green-600 bg-green-50 font-medium text-sm hover:bg-green-100 hover:border-green-300 transition-all"
                 >
                   <CheckCircle size={16} />
-                  Got It!
+                  Got It
                 </button>
               </div>
             )}
@@ -381,7 +448,6 @@ export default function Study() {
               </button>
             )}
 
-            {/* Navigation */}
             <div className="flex items-center justify-between">
               <button
                 onClick={handlePrev}
@@ -407,7 +473,6 @@ export default function Study() {
         </div>
       </div>
 
-      {/* Bottom deck preview */}
       <div
         className="bg-white border-t border-slate-100 px-8 py-4 motion-reveal-fast"
         style={{ animationDelay: "200ms" }}
@@ -423,6 +488,7 @@ export default function Study() {
                   onClick={() => {
                     setCurrentIndex(i);
                     setIsFlipped(false);
+                    setRecallStartTime(null);
                   }}
                   className="shrink-0 relative rounded-xl overflow-hidden border-2 transition-all"
                   style={{
@@ -432,10 +498,10 @@ export default function Study() {
                       i === currentIndex
                         ? "#6366f1"
                         : s === "known"
-                        ? "#10b981"
-                        : s === "unknown"
-                        ? "#ef4444"
-                        : "#e2e8f0",
+                          ? "#10b981"
+                          : s === "unknown"
+                            ? "#ef4444"
+                            : "#e2e8f0",
                     background: mode === "word" ? "#f8fafc" : undefined,
                   }}
                 >

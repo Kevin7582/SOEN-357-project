@@ -9,6 +9,7 @@ import {
   Layers,
   Image,
   Languages,
+  FlaskConical,
 } from "lucide-react";
 import { vocab } from "../../data/vocab";
 
@@ -120,6 +121,13 @@ export default function Home() {
               <BookOpen size={16} />
               Start Studying
               <ArrowRight size={16} />
+            </button>
+            <button
+              onClick={() => navigate("/evaluation")}
+              className="motion-button inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold transition-all hover:scale-105 active:scale-95 border border-white/30 bg-white/10"
+            >
+              <FlaskConical size={16} />
+              Open Evaluation
             </button>
           </div>
         </div>
