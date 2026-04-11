@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   BarChart3,
@@ -16,6 +16,7 @@ import {
   createSession,
   getActiveSession,
   getAllSessions,
+  hydrateCompletedSessionsFromSupabase,
   setActiveSessionId,
   type ParticipantSession,
   type StudyGroup,
@@ -44,6 +45,18 @@ export default function Evaluation() {
   const sessions = useMemo(() => getAllSessions(), [refreshKey]);
   const activeSession = useMemo(() => getActiveSession(), [refreshKey]);
   const groupStats = useMemo(() => calculateGroupAverages(sessions), [sessions]);
+
+  useEffect(() => {
+    let isMounted = true;
+    void hydrateCompletedSessionsFromSupabase().then(() => {
+      if (isMounted) {
+        setRefreshKey((k) => k + 1);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleStartSession = () => {
     if (!participantId.trim()) return;

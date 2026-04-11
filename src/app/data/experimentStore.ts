@@ -63,7 +63,17 @@ type SupabaseSessionRow = {
   updated_at: string;
   evaluation_status: EvaluationStatus;
   completed_at: string | null;
-  payload: ParticipantSession;
+  payload: Partial<ParticipantSession> | null;
+};
+
+type SupabaseTestResultRow = {
+  session_id: string;
+  phase: TestPhase;
+  completed_at: string;
+  correct_count: number;
+  total_count: number;
+  accuracy: number;
+  average_response_time_ms: number;
 };
 
 async function syncSessionToSupabase(session: ParticipantSession) {
@@ -101,6 +111,85 @@ function buildSessionId() {
 
 export function getAllSessions(): ParticipantSession[] {
   return loadSessions().sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+function normalizeSessionRow(
+  row: SupabaseSessionRow,
+  testResultsBySession: Map<string, Record<TestPhase, TestResult>>,
+): ParticipantSession {
+  const payload = row.payload ?? {};
+  const sessionTests = testResultsBySession.get(row.id);
+  const immediateTest = payload.immediateTest ?? sessionTests?.immediate ?? null;
+  const delayedTest = payload.delayedTest ?? sessionTests?.delayed ?? null;
+  const completedAt = payload.completedAt ?? row.completed_at ?? null;
+  const evaluationStatus =
+    payload.evaluationStatus ??
+    row.evaluation_status ??
+    (delayedTest || completedAt ? "completed" : "in_progress");
+  return {
+    id: payload.id ?? row.id,
+    participantId: payload.participantId ?? row.participant_id,
+    group: payload.group ?? row.group_label,
+    learningMode: payload.learningMode ?? row.learning_mode,
+    createdAt: payload.createdAt ?? row.created_at,
+    learningStartedAt: payload.learningStartedAt ?? null,
+    learningCompletedAt: payload.learningCompletedAt ?? null,
+    studyAttempts: payload.studyAttempts ?? [],
+    reviewFrequencyByWord: payload.reviewFrequencyByWord ?? {},
+    immediateTest,
+    delayedTest,
+    evaluationStatus,
+    completedAt,
+  };
+}
+
+export async function hydrateCompletedSessionsFromSupabase() {
+  const { supabase } = await import("../../utils/supabase");
+  if (!supabase) return;
+  try {
+    const { data, error } = await supabase
+      .from(SUPABASE_TABLE)
+      .select(
+        "id, participant_id, group_label, learning_mode, created_at, updated_at, evaluation_status, completed_at, payload",
+      )
+      .eq("evaluation_status", "completed");
+    if (error || !data) return;
+    const sessionIds = (data as SupabaseSessionRow[]).map((row) => row.id);
+    const testResultsBySession = new Map<string, Record<TestPhase, TestResult>>();
+    if (sessionIds.length > 0) {
+      const { data: testRows, error: testError } = await supabase
+        .from("test_results")
+        .select(
+          "session_id, phase, completed_at, correct_count, total_count, accuracy, average_response_time_ms",
+        )
+        .in("session_id", sessionIds);
+      if (!testError && testRows) {
+        for (const row of testRows as SupabaseTestResultRow[]) {
+          const existing = testResultsBySession.get(row.session_id) ?? ({} as Record<TestPhase, TestResult>);
+          existing[row.phase] = {
+            completedAt: row.completed_at,
+            correctCount: row.correct_count,
+            totalCount: row.total_count,
+            accuracy: row.accuracy,
+            averageResponseTimeMs: row.average_response_time_ms,
+            responses: [],
+          };
+          testResultsBySession.set(row.session_id, existing);
+        }
+      }
+    }
+    const merged = new Map<string, ParticipantSession>();
+    for (const session of loadSessions()) {
+      merged.set(session.id, session);
+    }
+    for (const row of data as SupabaseSessionRow[]) {
+      const normalized = normalizeSessionRow(row, testResultsBySession);
+      merged.set(normalized.id, normalized);
+    }
+    saveSessions([...merged.values()]);
+  } catch {
+    // Ignore hydration errors; local operation remains available.
+  }
 }
 
 export function getActiveSessionId(): string | null {
