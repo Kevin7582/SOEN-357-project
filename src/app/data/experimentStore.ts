@@ -1,6 +1,7 @@
 export type StudyGroup = "A" | "B";
 export type LearningMode = "image" | "word";
 export type TestPhase = "immediate" | "delayed";
+export type EvaluationStatus = "in_progress" | "completed";
 
 export interface StudyAttempt {
   wordId: number;
@@ -38,6 +39,8 @@ export interface ParticipantSession {
   reviewFrequencyByWord: Record<number, number>;
   immediateTest: TestResult | null;
   delayedTest: TestResult | null;
+  evaluationStatus: EvaluationStatus;
+  completedAt: string | null;
 }
 
 interface StudyMetrics {
@@ -58,6 +61,8 @@ type SupabaseSessionRow = {
   learning_mode: LearningMode;
   created_at: string;
   updated_at: string;
+  evaluation_status: EvaluationStatus;
+  completed_at: string | null;
   payload: ParticipantSession;
 };
 
@@ -71,6 +76,8 @@ async function syncSessionToSupabase(session: ParticipantSession) {
     learning_mode: session.learningMode,
     created_at: session.createdAt,
     updated_at: new Date().toISOString(),
+    evaluation_status: session.evaluationStatus,
+    completed_at: session.completedAt,
     payload: session,
   };
   try {
@@ -130,23 +137,30 @@ export function createSession(participantId: string, group: StudyGroup): Partici
     reviewFrequencyByWord: {},
     immediateTest: null,
     delayedTest: null,
+    evaluationStatus: "in_progress",
+    completedAt: null,
   };
 
   const sessions = loadSessions();
   sessions.push(session);
   saveSessions(sessions);
   setActiveSessionId(session.id);
-  void syncSessionToSupabase(session);
   return session;
 }
 
-function updateSession(sessionId: string, updater: (session: ParticipantSession) => ParticipantSession) {
+function updateSession(
+  sessionId: string,
+  updater: (session: ParticipantSession) => ParticipantSession,
+  options?: { sync?: boolean },
+) {
   const sessions = loadSessions();
   const idx = sessions.findIndex((s) => s.id === sessionId);
   if (idx === -1) return;
   sessions[idx] = updater(sessions[idx]);
   saveSessions(sessions);
-  void syncSessionToSupabase(sessions[idx]);
+  if (options?.sync) {
+    void syncSessionToSupabase(sessions[idx]);
+  }
 }
 
 export function markLearningStarted(sessionId: string) {
@@ -181,11 +195,21 @@ export function recordStudyAttempt(sessionId: string, attempt: StudyAttempt) {
 }
 
 export function saveTestResult(sessionId: string, phase: TestPhase, result: TestResult) {
-  updateSession(sessionId, (session) => ({
-    ...session,
-    immediateTest: phase === "immediate" ? result : session.immediateTest,
-    delayedTest: phase === "delayed" ? result : session.delayedTest,
-  }));
+  updateSession(
+    sessionId,
+    (session) => {
+      const delayedTest = phase === "delayed" ? result : session.delayedTest;
+      const isCompleted = delayedTest !== null;
+      return {
+        ...session,
+        immediateTest: phase === "immediate" ? result : session.immediateTest,
+        delayedTest,
+        evaluationStatus: isCompleted ? "completed" : "in_progress",
+        completedAt: isCompleted ? result.completedAt : null,
+      };
+    },
+    { sync: phase === "delayed" },
+  );
 }
 
 export function clearAllSessions() {
@@ -216,8 +240,8 @@ export function calculateStudyMetrics(session: ParticipantSession): StudyMetrics
 
 export function calculateGroupAverages(sessions: ParticipantSession[]) {
   const byGroup: Record<StudyGroup, ParticipantSession[]> = {
-    A: sessions.filter((s) => s.group === "A"),
-    B: sessions.filter((s) => s.group === "B"),
+    A: sessions.filter((s) => s.group === "A" && s.evaluationStatus === "completed"),
+    B: sessions.filter((s) => s.group === "B" && s.evaluationStatus === "completed"),
   };
 
   const getAverage = (values: number[]) =>
